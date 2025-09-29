@@ -1,11 +1,28 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { createEvent } from '@/lib/events/service';
+import { rateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
 import type { EventFormData } from '@/components/ui/EventForm';
 
 export async function createEventAction(formData: EventFormData) {
   try {
+    // Rate limiting
+    const headersList = await headers();
+    const clientId = getClientIdentifier(headersList);
+    const rateLimitResult = rateLimit({
+      ...RATE_LIMITS.EVENT_CREATION,
+      identifier: `create-event:${clientId}`,
+    });
+
+    if (!rateLimitResult.success) {
+      const resetDate = new Date(rateLimitResult.reset);
+      return {
+        error: `Te veel evenementen aangemaakt. Probeer het opnieuw om ${resetDate.toLocaleTimeString('nl-NL')}.`,
+      };
+    }
+
     // Validate input
     if (!formData.title || !formData.createdBy) {
       return {

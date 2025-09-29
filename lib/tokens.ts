@@ -1,21 +1,22 @@
 import { randomUUID, createHmac } from 'crypto';
 
-const TOKEN_SECRET = process.env.TOKEN_SECRET;
-
 // Validate TOKEN_SECRET on module load
-if (!TOKEN_SECRET) {
+if (!process.env.TOKEN_SECRET) {
   throw new Error(
     'TOKEN_SECRET environment variable is required. ' +
     'Add it to .env.local with a strong random value (min 32 characters).'
   );
 }
 
-if (process.env.NODE_ENV === 'production' && TOKEN_SECRET.length < 32) {
+if (process.env.NODE_ENV === 'production' && process.env.TOKEN_SECRET.length < 32) {
   throw new Error(
     'TOKEN_SECRET must be at least 32 characters in production for security. ' +
     'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
   );
 }
+
+// After validation, we know TOKEN_SECRET exists
+const TOKEN_SECRET: string = process.env.TOKEN_SECRET;
 
 /**
  * Generate a unique participation token for an invitee

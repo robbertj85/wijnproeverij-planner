@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
+    env: {
+      TOKEN_SECRET: 'test-secret-key-for-unit-tests-min-32-chars-long-secure',
+    },
   },
   resolve: {
     alias: {

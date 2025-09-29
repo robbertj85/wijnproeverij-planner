@@ -1,7 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { submitRating, getInviteeByToken } from '@/lib/events/service';
+import { rateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function submitRatingsAction(
   token: string,
@@ -13,6 +15,20 @@ export async function submitRatingsAction(
   }>
 ) {
   try {
+    // Rate limiting
+    const headersList = await headers();
+    const clientId = getClientIdentifier(headersList);
+    const rateLimitResult = rateLimit({
+      ...RATE_LIMITS.RATING_SUBMISSION,
+      identifier: `rating:${token}:${clientId}`,
+    });
+
+    if (!rateLimitResult.success) {
+      return {
+        error: 'Te veel beoordelingen. Wacht even en probeer het opnieuw.',
+      };
+    }
+
     // Get invitee data
     const invitee = await getInviteeByToken(token);
 

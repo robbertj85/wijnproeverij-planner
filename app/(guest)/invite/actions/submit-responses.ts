@@ -1,12 +1,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import {
   submitAvailability,
   createWineContribution,
   updateWineContribution,
   getEvent,
 } from '@/lib/events/service';
+import { rateLimit, getClientIdentifier, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function submitAvailabilityAction(
   inviteeId: string,
@@ -14,6 +16,20 @@ export async function submitAvailabilityAction(
   responses: Record<string, boolean>
 ) {
   try {
+    // Rate limiting
+    const headersList = await headers();
+    const clientId = getClientIdentifier(headersList);
+    const rateLimitResult = rateLimit({
+      ...RATE_LIMITS.AVAILABILITY_SUBMISSION,
+      identifier: `availability:${inviteeId}:${clientId}`,
+    });
+
+    if (!rateLimitResult.success) {
+      return {
+        error: 'Te veel verzoeken. Wacht even en probeer het opnieuw.',
+      };
+    }
+
     // Check if event is finalized
     const event = await getEvent(eventId);
     if (event?.finalized) {
@@ -62,6 +78,20 @@ export async function submitWineContributionAction(
   existingWineId?: string
 ) {
   try {
+    // Rate limiting
+    const headersList = await headers();
+    const clientId = getClientIdentifier(headersList);
+    const rateLimitResult = rateLimit({
+      ...RATE_LIMITS.WINE_SUBMISSION,
+      identifier: `wine:${inviteeId}:${clientId}`,
+    });
+
+    if (!rateLimitResult.success) {
+      return {
+        error: 'Te veel wijnen toegevoegd. Wacht even en probeer het opnieuw.',
+      };
+    }
+
     // Check if event is finalized
     const event = await getEvent(eventId);
     if (event?.finalized) {
