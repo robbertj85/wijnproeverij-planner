@@ -48,12 +48,12 @@
   - [x] 2.4 Build `lib/events/service.ts` for CRUD operations, duplicate detection logic, participant cap enforcement (max 8), and Vivino placeholder hooks.
   - [x] 2.5 Write unit tests for event service utilities including duplicate flag calculations and token validation.
 
-- [ ] 3.0 Build host-facing flows for event creation, scheduling poll management, and finalization. Make the app available in Dutch language.
+- [x] 3.0 Build host-facing flows for event creation, scheduling poll management, and finalization. Make the app available in Dutch language.
   - [x] 3.1 Implement event creation form with dynamic time slots, validation, and optimistic submission using server actions.
   - [x] 3.2 Generate shareable invite URLs and optional email invitation workflow with templated content and sendgrid/postmark integration.
   - [x] 3.3 Develop host management dashboard showing responses, wine list, duplicate alerts, and participant cap status.
-  - [ ] 3.4 Add controls to finalize the preferred time option, lock additional responses, and trigger finalization emails.
-  - [ ] 3.5 Create host analytics/overview components (attendance summary, wine stats) with responsive design and animations.
+  - [x] 3.4 Add controls to finalize the preferred time option, lock additional responses, and trigger finalization emails.
+  - [x] 3.5 Create host analytics/overview components (attendance summary, wine stats) with responsive design and animations.
 
 
 - [ ] 4.0 Build guest participation experience for availability, wine submissions, and duplicate flagging

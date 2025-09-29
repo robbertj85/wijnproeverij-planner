@@ -3,9 +3,18 @@
 import { useState } from 'react';
 import { Button } from './button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
-import { Input } from './input';
-import { Copy, Check, Mail, Users, Calendar, Wine, AlertTriangle } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './dialog';
+import { Copy, Check, Mail, Users, Calendar, Wine, AlertTriangle, Lock, CheckCircle2 } from 'lucide-react';
 import { useToast } from './use-toast';
+import { finalizeEventAction } from '@/app/(host)/events/actions/finalize-event';
+import { EventAnalytics } from './EventAnalytics';
 import type { Event, Invitee, TimeOption, WineContribution, InviteeTimeResponse } from '@prisma/client';
 
 type EventWithRelations = Event & {
@@ -20,6 +29,7 @@ type EventWithRelations = Event & {
     duplicateFlags: any[];
     flaggedAs: any[];
   })[];
+  selectedTimeOption?: TimeOption | null;
 };
 
 interface ManagementDashboardProps {
@@ -28,6 +38,9 @@ interface ManagementDashboardProps {
 
 export function ManagementDashboard({ event }: ManagementDashboardProps) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [finalizeDialogOpen, setFinalizeDialogOpen] = useState(false);
+  const [selectedTimeId, setSelectedTimeId] = useState<string | null>(null);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const { toast } = useToast();
 
   const getInviteUrl = (token: string) => {
@@ -52,6 +65,35 @@ export function ManagementDashboard({ event }: ManagementDashboardProps) {
     }
   };
 
+  const handleFinalize = async () => {
+    if (!selectedTimeId) return;
+
+    setIsFinalizing(true);
+    try {
+      const result = await finalizeEventAction(event.id, selectedTimeId);
+
+      if (result.error) {
+        toast({
+          title: 'Fout',
+          description: result.error,
+        });
+      } else {
+        toast({
+          title: 'Evenement definitief gemaakt!',
+          description: 'Bevestigingsmails zijn verstuurd naar alle deelnemers',
+        });
+        setFinalizeDialogOpen(false);
+      }
+    } catch (error) {
+      toast({
+        title: 'Fout',
+        description: 'Er is een onverwachte fout opgetreden',
+      });
+    } finally {
+      setIsFinalizing(false);
+    }
+  };
+
   const respondedCount = event.invitees.filter((inv) => inv.respondedAt).length;
   const totalInvitees = event.invitees.length;
 
@@ -60,31 +102,114 @@ export function ManagementDashboard({ event }: ManagementDashboardProps) {
       {/* Header */}
       <div className="border-b bg-card">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold">{event.title}</h1>
-          {event.description && (
-            <p className="mt-2 text-muted-foreground">{event.description}</p>
-          )}
-          <div className="mt-4 flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {respondedCount} / {totalInvitees} gereageerd
-              </span>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">{event.title}</h1>
+              {event.description && (
+                <p className="mt-2 text-muted-foreground">{event.description}</p>
+              )}
+              <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span>
+                    {respondedCount} / {totalInvitees} gereageerd
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>{event.timeOptions.length} tijdopties</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Wine className="h-4 w-4 text-muted-foreground" />
+                  <span>{event.wineContributions.length} wijnen</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>{event.timeOptions.length} tijdopties</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Wine className="h-4 w-4 text-muted-foreground" />
-              <span>{event.wineContributions.length} wijnen</span>
-            </div>
+
+            {event.finalized && (
+              <div className="flex items-center gap-2 rounded-lg bg-green-100 px-4 py-2 text-green-700">
+                <CheckCircle2 className="h-5 w-5" />
+                <span className="font-medium">Definitief</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Analytics Section */}
+        <div className="mb-8">
+          <h2 className="mb-4 text-xl font-semibold">Overzicht</h2>
+          <EventAnalytics event={event} />
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-2">
+          {/* Finalization Section */}
+          {!event.finalized && (
+            <Card className="lg:col-span-2 border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lock className="h-5 w-5" />
+                  Evenement definitief maken
+                </CardTitle>
+                <CardDescription>
+                  Kies een tijdstip om het evenement definitief te maken. Hierna kunnen gasten
+                  geen nieuwe reacties meer toevoegen.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => setFinalizeDialogOpen(true)}
+                  disabled={respondedCount === 0}
+                  size="lg"
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                  Maak definitief
+                </Button>
+                {respondedCount === 0 && (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Wacht tot minimaal één gast heeft gereageerd
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Finalized Event Info */}
+          {event.finalized && event.selectedTimeOption && (
+            <Card className="lg:col-span-2 border-green-200 bg-gradient-to-br from-green-50 to-green-100/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-700">
+                  <CheckCircle2 className="h-5 w-5" />
+                  Definitief tijdstip
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg">
+                  <div className="font-semibold">
+                    {new Date(event.selectedTimeOption.startTime).toLocaleDateString('nl-NL', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {new Date(event.selectedTimeOption.startTime).toLocaleTimeString('nl-NL', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}{' '}
+                    -{' '}
+                    {new Date(event.selectedTimeOption.endTime).toLocaleTimeString('nl-NL', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Invite Links */}
           <Card>
             <CardHeader>
@@ -151,9 +276,13 @@ export function ManagementDashboard({ event }: ManagementDashboardProps) {
                 const availableCount = timeOption.responses.filter(
                   (r) => r.available
                 ).length;
+                const isSelected = event.selectedTimeOptionId === timeOption.id;
 
                 return (
-                  <div key={timeOption.id} className="rounded-lg border p-4">
+                  <div
+                    key={timeOption.id}
+                    className={`rounded-lg border p-4 ${isSelected ? 'border-green-500 bg-green-50' : ''}`}
+                  >
                     <div className="mb-2 flex items-center justify-between">
                       <div className="font-medium">
                         {new Date(timeOption.startTime).toLocaleDateString('nl-NL', {
@@ -161,6 +290,9 @@ export function ManagementDashboard({ event }: ManagementDashboardProps) {
                           day: 'numeric',
                           month: 'short',
                         })}
+                        {isSelected && (
+                          <span className="ml-2 text-xs text-green-700">✓ Geselecteerd</span>
+                        )}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {new Date(timeOption.startTime).toLocaleTimeString('nl-NL', {
@@ -224,10 +356,7 @@ export function ManagementDashboard({ event }: ManagementDashboardProps) {
                       wine.duplicateFlags.length > 0 || wine.flaggedAs.length > 0;
 
                     return (
-                      <div
-                        key={wine.id}
-                        className="rounded-lg border p-4"
-                      >
+                      <div key={wine.id} className="rounded-lg border p-4">
                         {hasDuplicates && (
                           <div className="mb-2 flex items-center gap-2 text-sm text-amber-600">
                             <AlertTriangle className="h-4 w-4" />
@@ -252,6 +381,78 @@ export function ManagementDashboard({ event }: ManagementDashboardProps) {
           )}
         </div>
       </div>
+
+      {/* Finalization Dialog */}
+      <Dialog open={finalizeDialogOpen} onOpenChange={setFinalizeDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Evenement definitief maken</DialogTitle>
+            <DialogDescription>
+              Kies welk tijdstip definitief wordt. Gasten ontvangen een bevestigingsmail en
+              kunnen daarna geen wijzigingen meer aanbrengen.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-4">
+            {event.timeOptions.map((timeOption) => {
+              const availableCount = timeOption.responses.filter((r) => r.available).length;
+
+              return (
+                <button
+                  key={timeOption.id}
+                  type="button"
+                  onClick={() => setSelectedTimeId(timeOption.id)}
+                  className={`w-full rounded-lg border p-4 text-left transition-colors hover:border-primary ${
+                    selectedTimeId === timeOption.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">
+                        {new Date(timeOption.startTime).toLocaleDateString('nl-NL', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long',
+                        })}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(timeOption.startTime).toLocaleTimeString('nl-NL', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}{' '}
+                        -{' '}
+                        {new Date(timeOption.endTime).toLocaleTimeString('nl-NL', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-green-600">
+                        {availableCount} beschikbaar
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFinalizeDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button
+              onClick={handleFinalize}
+              disabled={!selectedTimeId || isFinalizing}
+            >
+              {isFinalizing ? 'Definitief maken...' : 'Bevestig en verstuur emails'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
