@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { m } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,8 @@ interface Wine {
   vintage?: number | null;
 }
 
-export default function RatePage({ params }: { params: { eventId: string } }) {
+export default function RatePage({ params }: { params: Promise<{ eventId: string }> }) {
+  const { eventId } = use(params);
   const [wines, setWines] = useState<Wine[]>([]);
   const [ratings, setRatings] = useState<Record<string, { score: number; notes: string }>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,7 +44,7 @@ export default function RatePage({ params }: { params: { eventId: string } }) {
         vintage: 2015,
       },
     ]);
-  }, [params.eventId]);
+  }, [eventId]);
 
   const handleRatingChange = (wineId: string, score: number, notes: string) => {
     setRatings((prev) => ({
@@ -70,7 +71,7 @@ export default function RatePage({ params }: { params: { eventId: string } }) {
     }));
 
     try {
-      const result = await submitRatingsAction(token, params.eventId, ratingsArray);
+      const result = await submitRatingsAction(token, eventId, ratingsArray);
 
       if (result.error) {
         toast({
@@ -82,7 +83,7 @@ export default function RatePage({ params }: { params: { eventId: string } }) {
           title: 'Beoordelingen opgeslagen!',
           description: 'Bedankt voor je scores',
         });
-        router.push(`/events/${params.eventId}/recap`);
+        router.push(`/events/${eventId}/recap`);
       }
     } catch (error) {
       toast({

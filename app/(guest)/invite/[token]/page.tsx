@@ -3,13 +3,14 @@ import { getInviteeByToken } from '@/lib/events/service';
 import { GuestInvitePage } from '@/components/ui/GuestInvitePage';
 
 interface InvitePageProps {
-  params: {
+  params: Promise<{
     token: string;
-  };
+  }>;
 }
 
 export default async function InvitePage({ params }: InvitePageProps) {
-  const inviteeData = await getInviteeByToken(params.token);
+  const { token } = await params;
+  const inviteeData = await getInviteeByToken(token);
 
   if (!inviteeData) {
     notFound();
@@ -19,7 +20,8 @@ export default async function InvitePage({ params }: InvitePageProps) {
 }
 
 export async function generateMetadata({ params }: InvitePageProps) {
-  const inviteeData = await getInviteeByToken(params.token);
+  const { token } = await params;
+  const inviteeData = await getInviteeByToken(token);
 
   if (!inviteeData) {
     return {
