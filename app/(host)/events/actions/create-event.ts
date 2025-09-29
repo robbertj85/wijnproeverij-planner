@@ -56,6 +56,11 @@ export async function createEventAction(formData: EventFormData) {
     // Redirect to management page
     redirect(`/events/${event.id}/manage`);
   } catch (error) {
+    // Re-throw redirect errors (Next.js uses them for navigation)
+    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+      throw error;
+    }
+
     console.error('Failed to create event:', error);
     return {
       error:
