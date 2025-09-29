@@ -34,7 +34,7 @@
 
 ## Tasks
 
-- [ ] 1.0 Establish project foundation, dependencies, and shared UI/UX scaffolding
+- [x] 1.0 Establish project foundation, dependencies, and shared UI/UX scaffolding
   - [x] 1.1 Initialize Next.js App Router project, configure TypeScript strict mode, and prepare Vercel deployment settings.
   - [x] 1.2 Install and configure Tailwind CSS, ShadCN UI, Lucide icons, Framer Motion, and supporting tooling (ESLint, Prettier, testing libs).
   - [x] 1.3 Create global layout, theme tokens inspired by wine palette, and shared providers (Tailwind theme, motion config).
@@ -42,11 +42,11 @@
   - [x] 1.5 Draft README setup notes covering environment variables, scripts, and development workflow.
 
 - [ ] 2.0 Design and implement Prisma data models plus persistence layer for events, wines, and tokens
-  - [ ] 2.1 Model Event, TimeOption, Invitee, WineContribution, DuplicateFlag, Rating, and VivinoReference tables in `schema.prisma` with relations and constraints.
-  - [ ] 2.2 Implement participation token strategy (signed UUIDs) and add database indexes to support lookups and duplicate detection.
-  - [ ] 2.3 Generate migrations, run against local Postgres, and validate schema with sample seed data.
-  - [ ] 2.4 Build `lib/events/service.ts` for CRUD operations, duplicate detection logic, participant cap enforcement (max 8), and Vivino placeholder hooks.
-  - [ ] 2.5 Write unit tests for event service utilities including duplicate flag calculations and token validation.
+  - [x] 2.1 Model Event, TimeOption, Invitee, WineContribution, DuplicateFlag, Rating, and VivinoReference tables in `schema.prisma` with relations and constraints.
+  - [x] 2.2 Implement participation token strategy (signed UUIDs) and add database indexes to support lookups and duplicate detection.
+  - [x] 2.3 Generate migrations, run against local Postgres, and validate schema with sample seed data.
+  - [x] 2.4 Build `lib/events/service.ts` for CRUD operations, duplicate detection logic, participant cap enforcement (max 8), and Vivino placeholder hooks.
+  - [x] 2.5 Write unit tests for event service utilities including duplicate flag calculations and token validation.
 
 - [ ] 3.0 Build host-facing flows for event creation, scheduling poll management, and finalization. Make the app available in Dutch language. 
   - [ ] 3.1 Implement event creation form with dynamic time slots, validation, and optimistic submission using server actions.

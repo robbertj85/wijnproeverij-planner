@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  finalized   Boolean  @default(false)
+  finalizedAt DateTime?
+  selectedTimeOptionId String?
+
+  // Relations
+  timeOptions      TimeOption[]
+  invitees         Invitee[]
+  wineContributions WineContribution[]
+  selectedTimeOption TimeOption? @relation("SelectedTimeOption", fields: [selectedTimeOptionId], references: [id])
+
+  @@index([createdBy])
+  @@index([finalized])
+}
+
+model TimeOption {
+  id        String   @id @default(uuid())
+  eventId   String
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  responses InviteeTimeResponse[]
+  selectedByEvents Event[] @relation("SelectedTimeOption")
+
+  @@index([eventId])
+  @@index([startTime])
+}
+
+model Invitee {
+  id              String   @id @default(uuid())
+  eventId         String
+  name            String
+  email           String?
+  token           String   @unique
+  tokenCreatedAt  DateTime @default(now())
+  respondedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  event            Event                 @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  timeResponses    InviteeTimeResponse[]
+  wineContributions WineContribution[]
+  ratings          Rating[]
+
+  @@index([eventId])
+  @@index([token])
+  @@index([email])
+}
+
+// Junction table for many-to-many relationship with availability data
+model InviteeTimeResponse {
+  id           String   @id @default(uuid())
+  inviteeId    String
+  timeOptionId String
+  available    Boolean
+  createdAt    DateTime @default(now())
+
+  // Relations
+  invitee      Invitee    @relation(fields: [inviteeId], references: [id], onDelete: Cascade)
+  timeOption   TimeOption @relation(fields: [timeOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([inviteeId, timeOptionId])
+  @@index([inviteeId])
+  @@index([timeOptionId])
+}
+
+model WineContribution {
+  id           String   @id @default(uuid())
+  eventId      String
+  inviteeId    String
+  wineType     String   // Red, White, Rosé, Sparkling, Dessert
+  varietal     String?
+  producer     String?
+  region       String?
+  vintage      Int?
+  price        Float?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  event           Event            @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  invitee         Invitee          @relation(fields: [inviteeId], references: [id], onDelete: Cascade)
+  duplicateFlags  DuplicateFlag[]  @relation("OriginalWine")
+  flaggedAs       DuplicateFlag[]  @relation("DuplicateWine")
+  vivinoReference VivinoReference?
+  ratings         Rating[]
+
+  @@index([eventId])
+  @@index([inviteeId])
+  @@index([wineType])
+}
+
+model DuplicateFlag {
+  id                String   @id @default(uuid())
+  originalWineId    String
+  duplicateWineId   String
+  flaggedBy         String?  // Optional: track who flagged it
+  confidence        String   @default("high") // high, medium, low
+  createdAt         DateTime @default(now())
+
+  // Relations
+  originalWine  WineContribution @relation("OriginalWine", fields: [originalWineId], references: [id], onDelete: Cascade)
+  duplicateWine WineContribution @relation("DuplicateWine", fields: [duplicateWineId], references: [id], onDelete: Cascade)
+
+  @@unique([originalWineId, duplicateWineId])
+  @@index([originalWineId])
+  @@index([duplicateWineId])
+}
+
+model Rating {
+  id                 String   @id @default(uuid())
+  wineContributionId String
+  inviteeId          String
+  score              Int      // 0-100
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // Relations
+  wineContribution WineContribution @relation(fields: [wineContributionId], references: [id], onDelete: Cascade)
+  invitee          Invitee          @relation(fields: [inviteeId], references: [id], onDelete: Cascade)
+
+  @@unique([wineContributionId, inviteeId])
+  @@index([wineContributionId])
+  @@index([inviteeId])
+  @@index([score])
+}
+
+model VivinoReference {
+  id                 String   @id @default(uuid())
+  wineContributionId String   @unique
+  vivinoId           String?
+  vivinoUrl          String?
+  averageRating      Float?
+  ratingCount        Int?
+  imageUrl           String?
+  fetchedAt          DateTime @default(now())
+
+  // Relations
+  wineContribution WineContribution @relation(fields: [wineContributionId], references: [id], onDelete: Cascade)
+
+  @@index([vivinoId])
+}
