@@ -4,6 +4,12 @@ import { m } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
 import { Trophy, Star, Wine, AlertTriangle, Medal } from 'lucide-react';
 
+interface DuplicateFlag {
+  id: string;
+  originalWineId: string;
+  duplicateWineId: string;
+}
+
 interface Rating {
   id: string;
   score: number;
@@ -31,8 +37,8 @@ interface WineWithRatings {
   ratings: Rating[];
   averageScore: number | null;
   ratingCount: number;
-  duplicateFlags?: any[];
-  flaggedAs?: any[];
+  duplicateFlags?: DuplicateFlag[];
+  flaggedAs?: DuplicateFlag[];
 }
 
 interface RecapViewProps {

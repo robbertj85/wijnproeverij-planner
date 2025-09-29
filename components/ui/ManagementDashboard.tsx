@@ -15,7 +15,7 @@ import { Copy, Check, Mail, Users, Calendar, Wine, AlertTriangle, Lock, CheckCir
 import { useToast } from './use-toast';
 import { finalizeEventAction } from '@/app/(host)/events/actions/finalize-event';
 import { EventAnalytics } from './EventAnalytics';
-import type { Event, Invitee, TimeOption, WineContribution, InviteeTimeResponse } from '@prisma/client';
+import type { Event, Invitee, TimeOption, WineContribution, InviteeTimeResponse, DuplicateFlag } from '@prisma/client';
 
 type EventWithRelations = Event & {
   invitees: Invitee[];
@@ -26,8 +26,8 @@ type EventWithRelations = Event & {
   })[];
   wineContributions: (WineContribution & {
     invitee: Invitee;
-    duplicateFlags: any[];
-    flaggedAs: any[];
+    duplicateFlags: DuplicateFlag[];
+    flaggedAs: DuplicateFlag[];
   })[];
   selectedTimeOption?: TimeOption | null;
 };

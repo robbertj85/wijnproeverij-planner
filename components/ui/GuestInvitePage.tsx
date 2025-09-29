@@ -70,7 +70,15 @@ export function GuestInvitePage({ invitee }: GuestInvitePageProps) {
     }
   };
 
-  const handleWineSubmit = async (wineData: any) => {
+  const handleWineSubmit = async (wineData: {
+    wineType: string;
+    varietal: string;
+    producer: string;
+    region: string;
+    vintage: string;
+    price: string;
+    notes: string;
+  }) => {
     try {
       const result = await submitWineContributionAction(
         invitee.id,
