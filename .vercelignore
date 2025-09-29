@@ -1,0 +1,24 @@
+# Local environment files
+.env
+.env*.local
+
+# Development files
+emails/
+prisma/dev.db
+prisma/dev.db-journal
+
+# Test files
+coverage/
+.nyc_output/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
