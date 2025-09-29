@@ -1,4 +1,71 @@
-interface InviteEmailData {
+import fs from 'fs';
+import path from 'path';
+
+/**
+ * Helper to save emails to files during development
+ */
+async function saveEmailToFile(data: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  type: string;
+}): Promise<void> {
+  const emailsDir = path.join(process.cwd(), 'emails');
+
+  // Create emails directory if it doesn't exist
+  if (!fs.existsSync(emailsDir)) {
+    fs.mkdirSync(emailsDir, { recursive: true });
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const safeEmail = data.to.replace(/[^a-z0-9]/gi, '_');
+  const filename = `${timestamp}_${data.type}_${safeEmail}`;
+
+  // Save HTML version
+  const htmlPath = path.join(emailsDir, `${filename}.html`);
+  const htmlWithMeta = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${data.subject}</title>
+  <style>
+    body { margin: 20px; font-family: system-ui, -apple-system, sans-serif; }
+    .email-meta { background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .email-meta strong { display: inline-block; width: 80px; }
+  </style>
+</head>
+<body>
+  <div class="email-meta">
+    <div><strong>To:</strong> ${data.to}</div>
+    <div><strong>Subject:</strong> ${data.subject}</div>
+    <div><strong>Type:</strong> ${data.type}</div>
+    <div><strong>Timestamp:</strong> ${new Date().toLocaleString()}</div>
+  </div>
+  ${data.html}
+</body>
+</html>`;
+
+  fs.writeFileSync(htmlPath, htmlWithMeta, 'utf-8');
+
+  // Save text version
+  const textPath = path.join(emailsDir, `${filename}.txt`);
+  const textWithMeta = `To: ${data.to}
+Subject: ${data.subject}
+Type: ${data.type}
+Timestamp: ${new Date().toLocaleString()}
+
+${'-'.repeat(80)}
+
+${data.text}`;
+
+  fs.writeFileSync(textPath, textWithMeta, 'utf-8');
+
+  console.log(`[Email] Saved to: emails/${filename}.html`);
+}
+
+export interface InviteEmailData {
   inviteeName: string;
   inviteeEmail: string;
   eventTitle: string;
@@ -11,7 +78,7 @@ interface InviteEmailData {
   }>;
 }
 
-interface FinalizationEmailData {
+export interface FinalizationEmailData {
   inviteeName: string;
   inviteeEmail: string;
   eventTitle: string;
@@ -267,29 +334,32 @@ Deze bevestiging is verzonden via Wijnproeverij Planner
 
 /**
  * Send invite email using configured email provider
- * This is a placeholder that needs to be implemented with actual email service
+ * In development: saves emails as HTML files to emails/ directory
  */
 export async function sendInviteEmail(data: InviteEmailData): Promise<boolean> {
   try {
-    // TODO: Implement with actual email service (SendGrid, Postmark, etc.)
-    // Generate email content (will be used when email service is implemented)
-    void generateInviteEmailHTML(data);
-    void generateInviteEmailText(data);
+    const htmlContent = generateInviteEmailHTML(data);
+    const textContent = generateInviteEmailText(data);
+    const subject = `Uitnodiging: ${data.eventTitle}`;
 
+    // Development mode: save emails to files
+    if (process.env.NODE_ENV === 'development' || !process.env.EMAIL_API_KEY) {
+      await saveEmailToFile({
+        to: data.inviteeEmail,
+        subject,
+        html: htmlContent,
+        text: textContent,
+        type: 'invite',
+      });
+      console.log('[Email] Saved invite email to file for:', data.inviteeEmail);
+      return true;
+    }
+
+    // Production: use actual email service
+    // TODO: Implement with SendGrid, Postmark, Resend, etc.
     console.log('[Email] Would send invite to:', data.inviteeEmail);
-    console.log('[Email] Subject:', `Uitnodiging: ${data.eventTitle}`);
+    console.log('[Email] Subject:', subject);
     console.log('[Email] From:', process.env.EMAIL_FROM || 'noreply@winetasting.app');
-
-    // Placeholder for actual implementation:
-    // const htmlContent = generateInviteEmailHTML(data);
-    // const textContent = generateInviteEmailText(data);
-    // const result = await emailProvider.send({
-    //   to: data.inviteeEmail,
-    //   from: process.env.EMAIL_FROM,
-    //   subject: `Uitnodiging: ${data.eventTitle}`,
-    //   html: htmlContent,
-    //   text: textContent,
-    // });
 
     return true;
   } catch (error) {
@@ -303,13 +373,26 @@ export async function sendInviteEmail(data: InviteEmailData): Promise<boolean> {
  */
 export async function sendFinalizationEmail(data: FinalizationEmailData): Promise<boolean> {
   try {
-    // TODO: Implement with actual email service
-    // Generate email content (will be used when email service is implemented)
-    void generateFinalizationEmailHTML(data);
-    void generateFinalizationEmailText(data);
+    const htmlContent = generateFinalizationEmailHTML(data);
+    const textContent = generateFinalizationEmailText(data);
+    const subject = `Bevestiging: ${data.eventTitle}`;
 
+    // Development mode: save emails to files
+    if (process.env.NODE_ENV === 'development' || !process.env.EMAIL_API_KEY) {
+      await saveEmailToFile({
+        to: data.inviteeEmail,
+        subject,
+        html: htmlContent,
+        text: textContent,
+        type: 'finalization',
+      });
+      console.log('[Email] Saved confirmation email to file for:', data.inviteeEmail);
+      return true;
+    }
+
+    // Production: use actual email service
     console.log('[Email] Would send confirmation to:', data.inviteeEmail);
-    console.log('[Email] Subject:', `Bevestiging: ${data.eventTitle}`);
+    console.log('[Email] Subject:', subject);
 
     return true;
   } catch (error) {
