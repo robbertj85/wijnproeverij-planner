@@ -5,7 +5,6 @@ import {
   submitAvailability,
   createWineContribution,
   updateWineContribution,
-  getInviteeByToken,
   getEvent,
 } from '@/lib/events/service';
 

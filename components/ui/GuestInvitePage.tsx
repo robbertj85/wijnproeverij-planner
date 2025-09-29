@@ -10,11 +10,16 @@ import {
   submitAvailabilityAction,
   submitWineContributionAction,
 } from '@/app/(guest)/invite/actions/submit-responses';
-import { Calendar, Users, Wine, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Users, Wine, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { Event, Invitee, TimeOption, WineContribution, InviteeTimeResponse } from '@prisma/client';
 
 type InviteeWithRelations = Invitee & {
-  event: Event;
+  event: Event & {
+    timeOptions: TimeOption[];
+    wineContributions: (WineContribution & {
+      invitee: Invitee;
+    })[];
+  };
   timeResponses: InviteeTimeResponse[];
   wineContributions: WineContribution[];
 };

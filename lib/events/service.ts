@@ -1,6 +1,6 @@
 import { prisma } from '../prisma';
 import { generateParticipationToken } from '../tokens';
-import type { Event, WineContribution, Invitee, TimeOption } from '@prisma/client';
+import type { Event, WineContribution, Invitee } from '@prisma/client';
 
 const MAX_PARTICIPANTS = 8;
 const MIN_PARTICIPANTS = 2;
@@ -158,11 +158,20 @@ export async function addInvitee(eventId: string, name: string, email?: string):
   });
 }
 
-export async function getInviteeByToken(token: string): Promise<Invitee | null> {
+export async function getInviteeByToken(token: string) {
   return prisma.invitee.findUnique({
     where: { token },
     include: {
-      event: true,
+      event: {
+        include: {
+          timeOptions: true,
+          wineContributions: {
+            include: {
+              invitee: true,
+            },
+          },
+        },
+      },
       timeResponses: true,
       wineContributions: true,
     },

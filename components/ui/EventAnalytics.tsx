@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
+import { Card, CardContent, CardHeader, CardTitle } from './card';
 import { m } from 'framer-motion';
 import { BarChart3, TrendingUp, Users, Wine as WineIcon } from 'lucide-react';
 import type { Event, Invitee, TimeOption, WineContribution, InviteeTimeResponse } from '@prisma/client';

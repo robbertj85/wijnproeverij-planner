@@ -166,7 +166,7 @@ export function EventForm({ onSubmit, isSubmitting = false }: EventFormProps) {
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          {timeSlots.map((slot, index) => (
+          {timeSlots.map((slot) => (
             <m.div
               key={slot.id}
               initial={{ opacity: 0, y: -10 }}
@@ -245,7 +245,7 @@ export function EventForm({ onSubmit, isSubmitting = false }: EventFormProps) {
           </Button>
         </CardHeader>
         <CardContent className="space-y-3">
-          {invitees.map((invitee, index) => (
+          {invitees.map((invitee) => (
             <m.div
               key={invitee.id}
               initial={{ opacity: 0, x: -10 }}

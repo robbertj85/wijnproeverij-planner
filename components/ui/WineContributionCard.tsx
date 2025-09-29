@@ -48,7 +48,6 @@ interface WineContributionCardProps {
 export function WineContributionCard({
   existingWine,
   onSubmit,
-  isSubmitting = false,
 }: WineContributionCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formData, setFormData] = useState<WineFormData>({

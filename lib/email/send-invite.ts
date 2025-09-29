@@ -272,14 +272,17 @@ Deze bevestiging is verzonden via Wijnproeverij Planner
 export async function sendInviteEmail(data: InviteEmailData): Promise<boolean> {
   try {
     // TODO: Implement with actual email service (SendGrid, Postmark, etc.)
-    const htmlContent = generateInviteEmailHTML(data);
-    const textContent = generateInviteEmailText(data);
+    // Generate email content (will be used when email service is implemented)
+    void generateInviteEmailHTML(data);
+    void generateInviteEmailText(data);
 
     console.log('[Email] Would send invite to:', data.inviteeEmail);
     console.log('[Email] Subject:', `Uitnodiging: ${data.eventTitle}`);
     console.log('[Email] From:', process.env.EMAIL_FROM || 'noreply@winetasting.app');
 
     // Placeholder for actual implementation:
+    // const htmlContent = generateInviteEmailHTML(data);
+    // const textContent = generateInviteEmailText(data);
     // const result = await emailProvider.send({
     //   to: data.inviteeEmail,
     //   from: process.env.EMAIL_FROM,
@@ -301,8 +304,9 @@ export async function sendInviteEmail(data: InviteEmailData): Promise<boolean> {
 export async function sendFinalizationEmail(data: FinalizationEmailData): Promise<boolean> {
   try {
     // TODO: Implement with actual email service
-    const htmlContent = generateFinalizationEmailHTML(data);
-    const textContent = generateFinalizationEmailText(data);
+    // Generate email content (will be used when email service is implemented)
+    void generateFinalizationEmailHTML(data);
+    void generateFinalizationEmailText(data);
 
     console.log('[Email] Would send confirmation to:', data.inviteeEmail);
     console.log('[Email] Subject:', `Bevestiging: ${data.eventTitle}`);

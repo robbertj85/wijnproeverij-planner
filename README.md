@@ -141,21 +141,197 @@ See `prisma/schema.prisma` for full schema details.
 
 ## Deployment
 
-### Vercel Deployment
+### Vercel Deployment (Recommended)
 
-1. Connect your repository to Vercel
-2. Configure environment variables in Vercel dashboard
-3. Set `DATABASE_URL` to your Vercel Postgres connection string
-4. Deploy
+#### Initial Setup
 
-The app is configured for Vercel deployment via `vercel.json`.
+1. **Connect Repository**
+   - Connect your repository to Vercel via GitHub/GitLab/Bitbucket
+   - Vercel will auto-detect Next.js configuration
 
-### Database Migrations
+2. **Configure Environment Variables**
+
+   In Vercel dashboard, add these environment variables:
+   ```
+   DATABASE_URL=postgresql://...  (from Vercel Postgres)
+   TOKEN_SECRET=<generate-random-secret>
+   EMAIL_API_KEY=<sendgrid-or-postmark-key>
+   EMAIL_FROM=noreply@yourdomain.com
+   NEXT_PUBLIC_APP_URL=https://yourdomain.com
+   VIVINO_API_KEY=<optional-for-future>
+   ```
+
+3. **Database Setup**
+   - Create Vercel Postgres database
+   - Copy connection string to `DATABASE_URL`
+   - Run migrations (see below)
+
+4. **Deploy**
+   - Push to main branch triggers automatic deployment
+   - Or manually deploy via Vercel dashboard
+
+#### Database Migrations
 
 Run migrations before each deployment:
 ```bash
 npx prisma migrate deploy
 ```
+
+For Vercel, add to build settings:
+```json
+{
+  "buildCommand": "npx prisma migrate deploy && npm run build"
+}
+```
+
+#### Post-Deployment
+
+1. **Seed Database** (optional, for testing):
+   ```bash
+   npx prisma db seed
+   ```
+
+2. **Verify Deployment**:
+   - Test event creation flow
+   - Test invite URLs
+   - Verify email sending
+   - Check recap page
+
+### Testing Before Deployment
+
+#### Unit Tests
+```bash
+npm test                 # Run all unit tests
+npm test -- --coverage   # With coverage report
+```
+
+#### E2E Tests
+```bash
+npm run test:e2e              # Run Playwright tests
+npm run test:e2e -- --ui      # Run with UI mode
+npm run test:e2e -- --headed  # Run in headed mode
+```
+
+#### Type Checking
+```bash
+npm run type-check  # Verify TypeScript types
+```
+
+#### Linting
+```bash
+npm run lint        # Check code quality
+npm run format      # Auto-format code
+```
+
+### CI/CD Pipeline
+
+Create `.github/workflows/ci.yml`:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
+      - run: npm test
+      - run: npx playwright install --with-deps
+      - run: npm run test:e2e
+```
+
+### Manual Deployment (Alternative)
+
+#### Using Docker
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY prisma ./prisma
+RUN npx prisma generate
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
+
+Build and run:
+```bash
+docker build -t wine-scheduler .
+docker run -p 3000:3000 --env-file .env wine-scheduler
+```
+
+### Environment Variables Reference
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `TOKEN_SECRET` | Yes | Secret for signing tokens (min 32 chars) |
+| `EMAIL_API_KEY` | No | SendGrid or Postmark API key |
+| `EMAIL_FROM` | No | From address for emails |
+| `NEXT_PUBLIC_APP_URL` | Yes | Full URL of deployed app |
+| `VIVINO_API_KEY` | No | Future Vivino integration |
+
+### Feature Flags
+
+Future Vivino integration can be toggled via environment variable:
+
+```bash
+ENABLE_VIVINO=true  # Enable Vivino wine search
+```
+
+To implement:
+```typescript
+const ENABLE_VIVINO = process.env.ENABLE_VIVINO === 'true';
+
+if (ENABLE_VIVINO) {
+  // Call Vivino API
+}
+```
+
+### Monitoring & Debugging
+
+- **Vercel Logs**: View real-time logs in Vercel dashboard
+- **Prisma Studio**: `npx prisma studio` to browse database
+- **Error Tracking**: Consider adding Sentry or similar
+
+### Production Checklist
+
+- [ ] All environment variables configured
+- [ ] Database migrations run successfully
+- [ ] Email sending tested
+- [ ] SSL certificate active (handled by Vercel)
+- [ ] Custom domain configured (if applicable)
+- [ ] All tests passing
+- [ ] Type checking passes
+- [ ] No console errors in production
+
+### Rollback Strategy
+
+If deployment fails:
+1. Revert to previous deployment in Vercel dashboard
+2. Or redeploy previous git commit
+3. Check migration status: `npx prisma migrate status`
 
 ## Contributing
 
@@ -164,6 +340,7 @@ npx prisma migrate deploy
 3. Ensure `npm run type-check` passes
 4. Write tests for new features
 5. Follow component documentation guidelines
+6. Run e2e tests for significant changes
 
 ## License
 

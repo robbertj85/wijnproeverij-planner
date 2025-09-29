@@ -108,7 +108,7 @@ async function main() {
     },
   });
 
-  const wine2 = await prisma.wineContribution.create({
+  await prisma.wineContribution.create({
     data: {
       eventId: event.id,
       inviteeId: invitees[1].id,
