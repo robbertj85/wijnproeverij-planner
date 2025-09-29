@@ -56,12 +56,12 @@
   - [x] 3.5 Create host analytics/overview components (attendance summary, wine stats) with responsive design and animations.
 
 
-- [ ] 4.0 Build guest participation experience for availability, wine submissions, and duplicate flagging
-  - [ ] 4.1 Develop invite landing page that recognizes participation tokens and displays event context without requiring login.
-  - [ ] 4.2 Build availability poll UI allowing guests to mark availability per time option with motion feedback.
-  - [ ] 4.3 Implement wine submission form capturing type, varietal, producer, region, vintage, price, notes, and Vivino search placeholder.
-  - [ ] 4.4 Integrate duplicate detection warnings in real time and allow guests to adjust submissions accordingly.
-  - [ ] 4.5 Enforce participant cap (max 8 plus or min 2) and handle edge cases (event finalized, already responded) with friendly messaging.
+- [x] 4.0 Build guest participation experience for availability, wine submissions, and duplicate flagging
+  - [x] 4.1 Develop invite landing page that recognizes participation tokens and displays event context without requiring login.
+  - [x] 4.2 Build availability poll UI allowing guests to mark availability per time option with motion feedback.
+  - [x] 4.3 Implement wine submission form capturing type, varietal, producer, region, vintage, price, notes, and Vivino search placeholder.
+  - [x] 4.4 Integrate duplicate detection warnings in real time and allow guests to adjust submissions accordingly.
+  - [x] 4.5 Enforce participant cap (max 8 plus or min 2) and handle edge cases (event finalized, already responded) with friendly messaging.
 
 - [ ] 5.0 Deliver post-event rating workflow, recap sharing, email notifications, and QA/deployment readiness
   - [ ] 5.1 Create rating interface for 0–100 scoring with tasting notes, available after event finalization.
